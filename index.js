@@ -91,19 +91,31 @@ function get_sun_spectra(start, stop, step) {
     return spectra;
 }
 
+function get_sun_relative_spectra(start, stop, step) {
+    let peak = get_peak_wavelength(T_sun);
+    let peak_r = do_sun_blackbody(peak);
+    let spectra = get_sun_spectra(start, stop, step);
+
+    for(let i = 0; i < spectra.length; i++) {
+        spectra[i].radiance_rel = spectra[i].radiance / peak_r;
+    }
+
+    return spectra;
+}
+
 function get_sun_xyz() {
     const from = 380 * nano;
     const to = 780 * nano;
     const step = 5 * nano;
 
-    let spectra = get_sun_spectra(from, to, step);
+    let spectra = get_sun_relative_spectra(from, to, step);
     let xfunctbl = [];
     let yfunctbl = [];
     let zfunctbl = [];
 
     for(let i = from; i < to; i += step) {
         let cie_intensity = get_xyz_intensity(i);
-        let radiance = get_value_from_tbl(spectra, i, "lambda", "radiance");
+        let radiance = get_value_from_tbl(spectra, i, "lambda", "radiance_rel");
         let x = cie_intensity.x * radiance;
         let y = cie_intensity.y * radiance;
         let z = cie_intensity.z * radiance;
@@ -124,7 +136,9 @@ function get_sun_xyz() {
         });
     }
 
-    console.log(zfunctbl);
+    console.log(from);
+    console.log(to);
+    console.log(step);
 
     return {
         x: integration(from, to, step, xfunctbl),
@@ -135,6 +149,7 @@ function get_sun_xyz() {
 
 function get_sun_rgb() {
     let xyz = get_sun_xyz();
+    console.log(xyz);
     let rgb = xyz_to_rgb(xyz.x, xyz.y, xyz.z);
     let sum = rgb.r + rgb.g + rgb.b;
 
@@ -150,5 +165,5 @@ function get_rgb_from_rayleigh(N, R, theta) {
 }
 
 function runsim () {
-    //
+    console.log(get_sun_rgb());
 }
